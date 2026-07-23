@@ -4,8 +4,10 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 
 $path = trim((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 $base = trim((string)parse_url($config['app_url'], PHP_URL_PATH), '/');
-if ($base && str_starts_with($path, $base)) $path = trim(substr($path, strlen($base)), '/');
+if ($base && strpos($path, $base) === 0) $path = trim(substr($path, strlen($base)), '/');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if (!database_ready()) redirect('install.php');
 
 function rooms(): array { return db()->query('SELECT * FROM room_types WHERE active=1 ORDER BY base_price')->fetchAll(); }
 function room_image(array $room): string { return url('assets/images/rarinco-real/' . ($room['image'] ?: 'room-matrimonial.webp')); }
