@@ -30,15 +30,22 @@ function db(): PDO {
 }
 
 function e(?string $value): string { return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); }
-function url(string $path = ''): string { global $config; return rtrim($config['app_url'], '/') . '/' . ltrim($path, '/'); }
-function redirect(string $path): never { header('Location: ' . url($path)); exit; }
+function base_url(): string {
+    global $config;
+    if (!empty($config['app_url'])) return rtrim($config['app_url'], '/');
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $host = preg_replace('/[^a-zA-Z0-9.:-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+    return ($https ? 'https' : 'http') . '://' . $host;
+}
+function url(string $path = ''): string { return base_url() . '/' . ltrim($path, '/'); }
+function redirect(string $path) { header('Location: ' . url($path)); exit; }
 function csrf(): string { if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32)); return $_SESSION['csrf']; }
 function verify_csrf(): void { if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['_token'] ?? '')) { http_response_code(419); exit('La sesión expiró. Recarga la página.'); } }
 function flash(string $type, string $message): void { $_SESSION['flash'] = compact('type', 'message'); }
 function pull_flash(): ?array { $f = $_SESSION['flash'] ?? null; unset($_SESSION['flash']); return $f; }
 function admin(): bool { return !empty($_SESSION['admin_id']); }
 function require_admin(): void { if (!admin()) redirect('admin/login'); }
-function clp(int|float $value): string { return '$' . number_format((float)$value, 0, ',', '.'); }
+function clp($value): string { return '$' . number_format((float)$value, 0, ',', '.'); }
 function nights(string $from, string $to): int { return max(0, (int)(new DateTime($from))->diff(new DateTime($to))->days); }
 
 function setting(string $key, string $fallback = ''): string {
@@ -56,3 +63,8 @@ function ensure_admin(): void {
     } catch (Throwable) {}
 }
 ensure_admin();
+
+function database_ready(): bool {
+    try { db()->query('SELECT 1 FROM room_types LIMIT 1'); return true; }
+    catch (Throwable $e) { return false; }
+}
