@@ -7,9 +7,17 @@ $base = trim((string)parse_url(base_url(), PHP_URL_PATH), '/');
 if ($base && strpos($path, $base) === 0) $path = trim(substr($path, strlen($base)), '/');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-if (!database_ready()) redirect('install.php');
-
-function rooms(): array { return db()->query('SELECT * FROM room_types WHERE active=1 ORDER BY base_price')->fetchAll(); }
+function rooms(): array {
+    try { return db()->query('SELECT * FROM room_types WHERE active=1 ORDER BY base_price')->fetchAll(); }
+    catch (Throwable $e) {
+        return [
+            ['id'=>1,'slug'=>'single','name'=>'Habitación Individual','short_description'=>'Una alternativa cómoda para viajes de trabajo y estadías individuales.','description'=>'Espacio funcional con baño privado, desayuno, Wi-Fi y climatización.','capacity'=>1,'beds'=>'1 cama matrimonial','base_price'=>55000,'image'=>'room-matrimonial.webp'],
+            ['id'=>2,'slug'=>'matrimonial','name'=>'Habitación Matrimonial','short_description'=>'Comodidad y tranquilidad para parejas o viajeros que buscan más espacio.','description'=>'Habitación luminosa con cama matrimonial y servicios incluidos.','capacity'=>2,'beds'=>'1 cama matrimonial','base_price'=>68000,'image'=>'room-matrimonial.webp'],
+            ['id'=>3,'slug'=>'triple','name'=>'Habitación Triple','short_description'=>'Una distribución práctica para familias pequeñas o compañeros de viaje.','description'=>'Tres plazas, baño privado, climatización y desayuno incluido.','capacity'=>3,'beds'=>'3 camas','base_price'=>85000,'image'=>'room-triple.webp'],
+            ['id'=>4,'slug'=>'familiar','name'=>'Habitación Familiar','short_description'=>'Más espacio y flexibilidad para vacaciones familiares en el Biobío.','description'=>'Habitación amplia para compartir con comodidad.','capacity'=>4,'beds'=>'3 camas','base_price'=>105000,'image'=>'room-family.webp'],
+        ];
+    }
+}
 function room_image(array $room): string { return url('assets/images/rarinco-real/' . ($room['image'] ?: 'room-matrimonial.webp')); }
 function head_html(string $title, string $description): void { $canonical = url(trim((string)parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/')); ?>
 <!doctype html><html lang="es-CL"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?=e($title)?></title><meta name="description" content="<?=e($description)?>"><link rel="canonical" href="<?=e($canonical)?>"><meta property="og:type" content="website"><meta property="og:title" content="<?=e($title)?>"><meta property="og:description" content="<?=e($description)?>"><meta property="og:image" content="<?=url('assets/images/rarinco-real/room-matrimonial.webp')?>"><link rel="stylesheet" href="<?=url('assets/css/globals.css')?>"><link rel="stylesheet" href="<?=url('assets/css/public-refresh.css')?>"><link rel="stylesheet" href="<?=url('assets/css/php-app.css')?>"><script type="application/ld+json"><?=json_encode(['@context'=>'https://schema.org','@type'=>'Hotel','name'=>'Hotel Rarinco','url'=>base_url(),'telephone'=>'+56978466768','address'=>['@type'=>'PostalAddress','streetAddress'=>'Avenida Las Industrias 2250','addressLocality'=>'Los Ángeles','addressRegion'=>'Biobío','addressCountry'=>'CL']], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?></script></head><body>
