@@ -31,8 +31,6 @@ function db(): PDO {
 
 function e(?string $value): string { return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); }
 function base_url(): string {
-    global $config;
-    if (!empty($config['app_url'])) return rtrim($config['app_url'], '/');
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
     $host = preg_replace('/[^a-zA-Z0-9.:-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
     return ($https ? 'https' : 'http') . '://' . $host;
