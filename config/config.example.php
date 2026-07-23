@@ -1,6 +1,6 @@
 <?php
 return [
-    'app_url' => 'https://tudominio.cl',
+    'app_url' => 'https://rarinco.gocreative.cl',
     'db' => [
         'host' => 'localhost',
         'port' => '3306',
